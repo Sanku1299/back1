@@ -2,11 +2,11 @@ const express = require('express');
 
 const app = express();
 
-app.use("/home", (req,res)=>{
+app.use("/home", (req,res) => {
     res.send("Home")
 });
 
-app.use("/test", (req,res)=>{
+app.use("/test", (req,res) => {
     res.send("test")
 });
 
