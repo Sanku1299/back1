@@ -1,35 +1,70 @@
-const express = require('express');
-
+const express = require("express");
+const { connectDB } = require("./config/database");
 const app = express();
+const User = require("./models/user");
 
-const {adminAuth,userAuth} = require("./middlewares/auth");
+app.use(express.json());
 
-app.use("/admin", adminAuth);
-
-app.get("/user",userAuth, (req, res)=>{
-    res.send("user login successful");
-})
-
-app.get("/admin/getData", (req,res)=>{
-    res.send("All Data sent")
+app.get("/user", async (req, res) => {
+  try {
+    const user = await User.find({ emailId: req.body.emailId });
+    if (user.length === 0) {
+      res.send("User not found");
+    } else {
+      res.send(user);
+    }
+  } catch (err) {
+    res.status(400).send("Error" + err.message);
+  }
 });
 
-app.get("/admin/deleteData", (req,res)=>{
-    res.send("All Data deleted")
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (err) {
+    res.status(400).send("Error" + err.message);
+  }
 });
 
-// app.use("/home", (req,res) => {
-//     res.send("Home")
-// });
-
-// app.use("/test", (req,res) => {
-//     res.send("test")
-// });
-
-// app.use("/", (req,res)=>{
-//     res.send("H")
-// });
-
-app.listen(7777, ()=> {
-    console.log("Server is running on port 7777");
+app.post("/signup", async (req, res) => {
+  const user = new User(req.body);
+  try {
+    await user.save();
+    res.send("User Added Successfully!");
+  } catch (err) {
+    res.status(400).send("Error saving user:" + err.message);
+  }
 });
+
+app.patch("/user", async (req, res) => {
+  const data = req.body;
+  const userId = req.body.userId;
+  try {
+    await User.findByIdAndUpdate({ _id: userId }, data);
+    res.send("user updated successfully");
+  } catch (err) {
+    res.status(400).send("Error" + err.message);
+  }
+});
+
+app.delete("/user", async (req, res) => {
+  const userId = req.body.userId;
+  try {
+    const user = await User.findByIdAndDelete({ _id: userId });
+    res.send("user deleted successfully");
+  } catch (err) {
+    res.status(400).send("Error" + err.message);
+  }
+});
+
+connectDB()
+  .then(() => {
+    console.log("Database connection established..");
+    app.listen(7777, () => {
+      console.log("Server is running on port 7777");
+    });
+  })
+  .catch((err) => {
+    console.error("Database cannot be connected");
+  });
